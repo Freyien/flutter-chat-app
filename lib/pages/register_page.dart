@@ -1,6 +1,9 @@
-import 'package:chat/widgets/blue_button.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import 'package:chat/helpers/show_alert.dart';
+import 'package:chat/services/auth_service.dart';
+import 'package:chat/widgets/blue_button.dart';
 import 'package:chat/widgets/custom_input.dart';
 import 'package:chat/widgets/labels.dart';
 import 'package:chat/widgets/logo.dart';
@@ -59,6 +62,8 @@ class __FormState extends State<_Form> {
 
   @override
   Widget build(BuildContext context) {
+    final authService = Provider.of<AuthService>(context);
+
     return Container(
       margin: EdgeInsets.symmetric(vertical: 20, horizontal: 50),
       child: Column(
@@ -83,10 +88,27 @@ class __FormState extends State<_Form> {
           
           BlueButton(
             text: 'Registrarse',
-            onPressed: () {
-              print(emailController.text);
-              print(passwordController.text);
-            }
+            onPressed: authService.waiting 
+              ? null
+              : () async {
+                
+                // Close keyboard
+                FocusScope.of(context).unfocus();
+
+                final registerError = await authService.register(
+                  nameController.text.trim(),
+                  emailController.text.trim(), 
+                  passwordController.text.trim()
+                );
+
+                if ( registerError.isEmpty ) {
+                  //TODO: Connect with socket
+                  Navigator.pushReplacementNamed(context, 'users');
+                } else {
+                  showAlert(context, 'Registro', registerError);
+                }
+
+              }
           )
         ],
       ),
